@@ -1,4 +1,4 @@
-package xyz.rimon.videomash;
+package xyz.rimon.videomash.utils;
 
 import android.app.Activity;
 import android.media.CamcorderProfile;
@@ -7,13 +7,15 @@ import android.view.SurfaceHolder;
 
 import java.io.IOException;
 
+import xyz.rimon.videomash.config.Constants;
+
 /**
  * Created by SAyEM on 29/12/17.
  */
 
 public class MediaAssistant {
 
-    static MediaRecorder initRecorder(MediaRecorder recorder) {
+    public static MediaRecorder initRecorder(MediaRecorder recorder) {
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setVideoSource(MediaRecorder.VideoSource.DEFAULT);
         CamcorderProfile cpHigh = CamcorderProfile
@@ -25,7 +27,7 @@ public class MediaAssistant {
         return recorder;
     }
 
-    static MediaRecorder prepareRecorder(Activity context, MediaRecorder recorder, SurfaceHolder holder) {
+    public static MediaRecorder prepareRecorder(Activity context, MediaRecorder recorder, SurfaceHolder holder) {
         recorder.setPreviewDisplay(holder.getSurface());
 
         try {

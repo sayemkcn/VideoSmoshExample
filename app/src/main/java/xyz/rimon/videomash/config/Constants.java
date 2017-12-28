@@ -1,4 +1,4 @@
-package xyz.rimon.videomash;
+package xyz.rimon.videomash.config;
 
 /**
  * Created by SAyEM on 29/12/17.

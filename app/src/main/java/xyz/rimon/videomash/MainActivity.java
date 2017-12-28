@@ -3,21 +3,23 @@ package xyz.rimon.videomash;
 import android.content.pm.ActivityInfo;
 import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.view.MenuItem;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ProgressBar;
 
-import static xyz.rimon.videomash.MediaAssistant.initRecorder;
-import static xyz.rimon.videomash.MediaAssistant.prepareRecorder;
+import xyz.rimon.videomash.utils.Toaster;
 
-public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener, View.OnClickListener, SurfaceHolder.Callback {
+import static xyz.rimon.videomash.utils.MediaAssistant.initRecorder;
+import static xyz.rimon.videomash.utils.MediaAssistant.prepareRecorder;
+
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener, SurfaceHolder.Callback {
 
     MediaRecorder recorder;
     SurfaceHolder holder;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     Button btnRecord;
 
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,26 +50,14 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
         cameraView.setClickable(true);
 
-        this.btnRecord = this.findViewById(R.id.buttonstart);
-        this.btnRecord.setOnClickListener(this);
+        this.btnRecord = this.findViewById(R.id.btnRecord);
+        this.btnRecord.setOnTouchListener(this);
 
+        this.btnRecord = this.findViewById(R.id.btnDelete);
+        this.btnRecord.setOnTouchListener(this);
 
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(this);
+        this.progressBar = findViewById(R.id.progress);
 
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.navigation_home:
-                return true;
-            case R.id.navigation_dashboard:
-                return true;
-            case R.id.navigation_notifications:
-                return true;
-        }
-        return false;
     }
 
 
@@ -91,9 +82,39 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         finish();
     }
 
+//    @Override
+//    public void onClick(View view) {
+//        if (recording) {
+//            recorder.stop();
+//            recording = false;
+//
+//            // Let's initRecorder so we can record again
+//            this.recorder = initRecorder(this.recorder);
+//            this.recorder = prepareRecorder(this, this.recorder, this.holder);
+//        } else {
+//
+//            recording = true;
+//            recorder.start();
+//        }
+//    }
+
     @Override
-    public void onClick(View view) {
-        if (recording) {
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        int id = view.getId();
+        if (id == R.id.btnRecord) {
+            this.onRecordButtonPressed(motionEvent);
+        } else if (id == R.id.btnDelete) {
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP)
+                Toaster.toast(this, "DELETE");
+        }
+        return false;
+    }
+
+    private void onRecordButtonPressed(MotionEvent motionEvent) {
+        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            recording = true;
+            recorder.start();
+        } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             recorder.stop();
             recording = false;
 
@@ -101,9 +122,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             this.recorder = initRecorder(this.recorder);
             this.recorder = prepareRecorder(this, this.recorder, this.holder);
         } else {
-
-            recording = true;
-            recorder.start();
+            Log.i("MOTION_EVENT", motionEvent.toString());
         }
     }
+
+
 }
