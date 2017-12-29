@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private Button btnNext;
 
     private ProgressBar progressBar;
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         recorder = initRecorder(this.recorder);
         recorder = prepareRecorder(this, this.recorder, surfaceHolder);
+        this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
     }
 
     @Override
@@ -139,22 +142,36 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         this.progressBar.setProgress(0);
     }
 
-    private void onRecordButtonPressed(MotionEvent motionEvent) {
+    private void onRecordButtonPressed(final MotionEvent motionEvent) {
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
             recording = true;
             recorder.start();
+            handler.removeCallbacksAndMessages(null);
+            handler.postDelayed(runnable, 10000);
         } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-            recorder.stop();
-            recording = false;
-            StorageUtil.moveFile(this, System.currentTimeMillis() + ".mp4");
-            this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
-            // Let's initRecorder so we can record again
-            this.recorder = initRecorder(this.recorder);
-            this.recorder = prepareRecorder(this, this.recorder, this.holder);
+            if (recording) {
+                stopRecording();
+                handler.removeCallbacksAndMessages(null);
+            }
         } else {
             Log.i("MOTION_EVENT", motionEvent.toString());
         }
     }
 
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (recording) stopRecording();
+        }
+    };
 
+    private void stopRecording() {
+        recorder.stop();
+        recording = false;
+        StorageUtil.moveFile(this, System.currentTimeMillis() + ".mp4");
+        this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
+        // Let's initRecorder so we can record again
+        this.recorder = initRecorder(this.recorder);
+        this.recorder = prepareRecorder(this, this.recorder, this.holder);
+    }
 }

@@ -20,8 +20,8 @@ public class MediaAssistant {
                 .get(CamcorderProfile.QUALITY_480P);
         recorder.setProfile(cpHigh);
         recorder.setOutputFile(StorageUtil.TEMP_FILE_NAME);
-        recorder.setMaxDuration(500000); // 50 seconds
-        recorder.setMaxFileSize(500000000); // Approximately 5 megabytes
+        recorder.setMaxDuration(10000); // 50 seconds
+        recorder.setMaxFileSize(50000000); // Approximately 5 megabytes
         return recorder;
     }
 
