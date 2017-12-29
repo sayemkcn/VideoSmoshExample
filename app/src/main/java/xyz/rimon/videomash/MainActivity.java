@@ -14,6 +14,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
+import xyz.rimon.videomash.utils.StorageUtil;
 import xyz.rimon.videomash.utils.Toaster;
 
 import static xyz.rimon.videomash.utils.MediaAssistant.initRecorder;
@@ -117,7 +118,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             recorder.stop();
             recording = false;
-
+            StorageUtil.moveFile(this, System.currentTimeMillis() + ".mp4");
+            this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
             // Let's initRecorder so we can record again
             this.recorder = initRecorder(this.recorder);
             this.recorder = prepareRecorder(this, this.recorder, this.holder);

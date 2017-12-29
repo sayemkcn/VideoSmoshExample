@@ -49,7 +49,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:max="100"
-        android:progress="40" />
+        android:max="10"
+        android:progress="0" />
 
 </RelativeLayout>

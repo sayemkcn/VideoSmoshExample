@@ -7,8 +7,6 @@ import android.view.SurfaceHolder;
 
 import java.io.IOException;
 
-import xyz.rimon.videomash.config.Constants;
-
 /**
  * Created by SAyEM on 29/12/17.
  */
@@ -21,7 +19,7 @@ public class MediaAssistant {
         CamcorderProfile cpHigh = CamcorderProfile
                 .get(CamcorderProfile.QUALITY_480P);
         recorder.setProfile(cpHigh);
-        recorder.setOutputFile(Constants.TEMP_FILE_NAME);
+        recorder.setOutputFile(StorageUtil.TEMP_FILE_NAME);
         recorder.setMaxDuration(500000); // 50 seconds
         recorder.setMaxFileSize(500000000); // Approximately 5 megabytes
         return recorder;
