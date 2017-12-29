@@ -15,7 +15,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import xyz.rimon.videomash.utils.StorageUtil;
-import xyz.rimon.videomash.utils.Toaster;
 
 import static xyz.rimon.videomash.utils.MediaAssistant.initRecorder;
 import static xyz.rimon.videomash.utils.MediaAssistant.prepareRecorder;
@@ -105,8 +104,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         if (id == R.id.btnRecord) {
             this.onRecordButtonPressed(motionEvent);
         } else if (id == R.id.btnDelete) {
-            if (motionEvent.getAction() == MotionEvent.ACTION_UP)
-                Toaster.toast(this, "DELETE");
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP){
+                StorageUtil.clearLatest(this);
+                this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
+            }
         }
         return false;
     }

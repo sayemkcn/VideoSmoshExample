@@ -126,4 +126,16 @@ public class StorageUtil {
         stack = (Stack<String>) object;
         return stack.size();
     }
+
+    public static void clearLatest(Context context) {
+        Object object = readObjects(context, MANIFEST_FILE_NAME);
+        Stack<String> stack;
+        if (object == null) return;
+        stack = (Stack<String>) object;
+
+        String lastFileName = stack.get(stack.size() - 1);
+        if (new File(lastFileName).delete())
+            stack.pop();
+        writeObject(context, MANIFEST_FILE_NAME, stack);
+    }
 }
