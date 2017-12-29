@@ -6,12 +6,24 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
+import com.coremedia.iso.IsoFile;
+import com.googlecode.mp4parser.DataSource;
+import com.googlecode.mp4parser.authoring.Movie;
+import com.googlecode.mp4parser.authoring.Track;
+import com.googlecode.mp4parser.authoring.builder.DefaultMp4Builder;
+import com.googlecode.mp4parser.authoring.container.mp4.MovieCreator;
+
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.channels.Channels;
+import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
 
@@ -26,6 +38,7 @@ public class StorageUtil {
     private static String uniqueID = UUID.randomUUID().toString();
     public static String MANIFEST_FILE_NAME = "manifest.lol";
     public static String TEMP_FILE_NAME = "/sdcard/temp.mp4";
+    public static String MERGED_FILE_NAME = "video.mp4";
 
     public static void writeObject(Context context, String fileName, Object object) {
         // check permission
@@ -55,7 +68,7 @@ public class StorageUtil {
 
     }
 
-    public static Object readObjects(Context context, String fileName) {
+    public static Object readObject(Context context, String fileName) {
         // check permission
         if (!PermissionUtil.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE))
             PermissionUtil.askForPermission((Activity) context, Manifest.permission.READ_EXTERNAL_STORAGE);
@@ -111,16 +124,18 @@ public class StorageUtil {
         from.renameTo(to);
 
         // add file to manifest
-        Object object = readObjects(context, MANIFEST_FILE_NAME);
+        Object object = readObject(context, MANIFEST_FILE_NAME);
         Stack<String> stack;
         if (object != null) stack = (Stack<String>) object;
         else stack = new Stack<>();
         stack.push(to.getAbsolutePath());
         writeObject(context, MANIFEST_FILE_NAME, stack);
+
+        Logger.i(stack.toString());
     }
 
     public static int getNumberOfFiles(Context context) {
-        Object object = readObjects(context, MANIFEST_FILE_NAME);
+        Object object = readObject(context, MANIFEST_FILE_NAME);
         Stack<String> stack;
         if (object == null) return 0;
         stack = (Stack<String>) object;
@@ -128,14 +143,87 @@ public class StorageUtil {
     }
 
     public static void clearLatest(Context context) {
-        Object object = readObjects(context, MANIFEST_FILE_NAME);
+        Object object = readObject(context, MANIFEST_FILE_NAME);
         Stack<String> stack;
         if (object == null) return;
         stack = (Stack<String>) object;
-
+        if (stack.isEmpty()) return;
         String lastFileName = stack.get(stack.size() - 1);
         if (new File(lastFileName).delete())
             stack.pop();
         writeObject(context, MANIFEST_FILE_NAME, stack);
+    }
+
+    public static String mergeObjects(Context context, String fileName) {
+        Object object = readObject(context, MANIFEST_FILE_NAME);
+        Stack<String> stack;
+        if (object == null) stack = new Stack<>();
+        stack = (Stack<String>) object;
+
+        // prepare output file
+        File outputDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + context.getPackageName());
+        if (!outputDir.exists()) outputDir.mkdirs();
+        File outputFile = new File(outputDir, fileName);
+
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            assert stack != null;
+            for (int i = 0; i < stack.size(); i++) {
+                File f = new File(stack.get(i));
+                fis = new FileInputStream(f);
+                boolean append = i != 0;
+                fos = new FileOutputStream(outputFile, append);
+                IOUtils.copy(fis, fos);
+
+                f.delete();
+            }
+            writeObject(context, MANIFEST_FILE_NAME, new Stack<>());
+            return outputFile.getAbsolutePath();
+        } catch (IOException e) {
+            Log.e("CAN\'T READ OBJECTS ", e.toString());
+        } finally {
+            try {
+                if (fis != null) fis.close();
+                if (fos != null) fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+
+    public static void mergeVideos(Context context, List<InputStream> inputStreams, File outputFile) throws IOException {
+        MovieCreator mc = new MovieCreator();
+        Movie movie = new Movie();
+        for (InputStream i : inputStreams) {
+            Movie video = mc.build((DataSource) Channels.newChannel(i));
+            for (Track t : video.getTracks()) {
+                movie.addTrack(t);
+            }
+
+        }
+
+//        Movie video = mc.build(Channels.newChannel(AppendExample.class.getResourceAsStream("/count-video.mp4")));
+//        Movie audio = mc.build(Channels.newChannel(AppendExample.class.getResourceAsStream("/count-english-audio.mp4")));
+
+//        List<Track> videoTracks = movie.getTracks();
+//        video.setTracks(new LinkedList());
+//
+//        List<Track> audioTracks = audio.getTracks();
+//
+//        for (Track videoTrack : videoTracks) {
+//            video.addTrack(new AppendTrack(videoTrack, videoTrack));
+//        }
+//
+//        for (Track audioTrack : audioTracks) {
+//            video.addTrack(new AppendTrack(audioTrack, audioTrack));
+//        }
+
+        IsoFile out = (IsoFile) new DefaultMp4Builder().build(movie);
+        FileOutputStream fos = new FileOutputStream(outputFile);
+        out.getBox(fos.getChannel());
+        fos.close();
     }
 }

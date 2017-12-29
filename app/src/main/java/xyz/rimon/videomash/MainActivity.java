@@ -1,5 +1,6 @@
 package xyz.rimon.videomash;
 
+import android.app.ProgressDialog;
 import android.content.pm.ActivityInfo;
 import android.media.MediaRecorder;
 import android.os.Bundle;
@@ -12,20 +13,24 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
 import xyz.rimon.videomash.utils.StorageUtil;
+import xyz.rimon.videomash.utils.Toaster;
 
 import static xyz.rimon.videomash.utils.MediaAssistant.initRecorder;
 import static xyz.rimon.videomash.utils.MediaAssistant.prepareRecorder;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener, SurfaceHolder.Callback {
 
-    MediaRecorder recorder;
-    SurfaceHolder holder;
+    private MediaRecorder recorder;
+    private SurfaceHolder holder;
     boolean recording = false;
 
-    Button btnRecord;
+    private ImageButton btnRecord;
+    private Button btnDelete;
+    private Button btnNext;
 
     private ProgressBar progressBar;
 
@@ -53,8 +58,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         this.btnRecord = this.findViewById(R.id.btnRecord);
         this.btnRecord.setOnTouchListener(this);
 
-        this.btnRecord = this.findViewById(R.id.btnDelete);
-        this.btnRecord.setOnTouchListener(this);
+        this.btnDelete = this.findViewById(R.id.btnDelete);
+        this.btnDelete.setOnTouchListener(this);
+        this.btnNext = this.findViewById(R.id.btnNext);
+        this.btnNext.setOnTouchListener(this);
 
         this.progressBar = findViewById(R.id.progress);
 
@@ -104,12 +111,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         if (id == R.id.btnRecord) {
             this.onRecordButtonPressed(motionEvent);
         } else if (id == R.id.btnDelete) {
-            if (motionEvent.getAction() == MotionEvent.ACTION_UP){
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                 StorageUtil.clearLatest(this);
                 this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
             }
+        } else if (id == R.id.btnNext) {
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP)
+                this.onNextButtonClick();
         }
         return false;
+    }
+
+    private void onNextButtonClick() {
+        ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Processing..");
+        pd.show();
+        String fileName = StorageUtil.mergeObjects(this, StorageUtil.MERGED_FILE_NAME);
+        if (fileName != null)
+            Toaster.toast(this, "Success!\nFile can be found here: " + fileName);
+        else
+            Toaster.toast(this, "Failed!");
+        pd.dismiss();
+        this.progressBar.setProgress(0);
     }
 
     private void onRecordButtonPressed(MotionEvent motionEvent) {

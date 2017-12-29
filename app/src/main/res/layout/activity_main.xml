@@ -23,13 +23,12 @@
             android:layout_height="match_parent"
             android:layout_weight="1">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnRecord"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:background="@color/colorAccent"
-                android:text="Record"
+                android:src="@mipmap/ic_fiber_manual_record_black_24dp"
                 android:textColor="@android:color/white" />
 
             <Button
@@ -37,7 +36,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:text="Delere" />
+                android:text="Delete" />
+
+            <Button
+                android:id="@+id/btnNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:text="Next" />
         </RelativeLayout>
     </LinearLayout>
 
