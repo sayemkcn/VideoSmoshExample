@@ -1,8 +1,10 @@
 package xyz.rimon.videomash;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -126,10 +128,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         ProgressDialog pd = new ProgressDialog(this);
         pd.setMessage("Processing..");
         pd.show();
-        String fileName = StorageUtil.mergeObjects(this, StorageUtil.MERGED_FILE_NAME);
-        if (fileName != null)
-            Toaster.toast(this, "Success!\nFile can be found here: " + fileName);
-        else
+        String filePath = StorageUtil.mergeObjects(this, StorageUtil.MERGED_FILE_NAME);
+        if (filePath != null) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(filePath));
+            intent.setDataAndType(Uri.parse(filePath), "video/mp4");
+            startActivity(intent);
+        } else
             Toaster.toast(this, "Failed!");
         pd.dismiss();
         this.progressBar.setProgress(0);
