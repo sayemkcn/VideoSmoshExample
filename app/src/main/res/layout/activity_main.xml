@@ -23,33 +23,42 @@
             android:layout_height="match_parent"
             android:layout_weight="1">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnRecord"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:background="@color/colorAccent"
-                android:text="Record"
+                android:src="@mipmap/ic_fiber_manual_record_black_24dp"
                 android:textColor="@android:color/white" />
 
             <Button
+                android:background="@android:color/transparent"
                 android:id="@+id/btnDelete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:text="Delere" />
+                android:text="Delete" />
+
+            <Button
+                android:background="@android:color/transparent"
+                android:id="@+id/btnNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:text="Next" />
         </RelativeLayout>
     </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progress"
         style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:max="100"
-        android:progress="40" />
+        android:max="10"
+        android:progress="0" />
 
 </RelativeLayout>

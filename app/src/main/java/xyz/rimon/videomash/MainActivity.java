@@ -1,8 +1,12 @@
 package xyz.rimon.videomash;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -12,8 +16,10 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
+import xyz.rimon.videomash.utils.StorageUtil;
 import xyz.rimon.videomash.utils.Toaster;
 
 import static xyz.rimon.videomash.utils.MediaAssistant.initRecorder;
@@ -21,13 +27,16 @@ import static xyz.rimon.videomash.utils.MediaAssistant.prepareRecorder;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener, SurfaceHolder.Callback {
 
-    MediaRecorder recorder;
-    SurfaceHolder holder;
+    private MediaRecorder recorder;
+    private SurfaceHolder holder;
     boolean recording = false;
 
-    Button btnRecord;
+    private ImageButton btnRecord;
+    private Button btnDelete;
+    private Button btnNext;
 
     private ProgressBar progressBar;
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +62,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         this.btnRecord = this.findViewById(R.id.btnRecord);
         this.btnRecord.setOnTouchListener(this);
 
-        this.btnRecord = this.findViewById(R.id.btnDelete);
-        this.btnRecord.setOnTouchListener(this);
+        this.btnDelete = this.findViewById(R.id.btnDelete);
+        this.btnDelete.setOnTouchListener(this);
+        this.btnNext = this.findViewById(R.id.btnNext);
+        this.btnNext.setOnTouchListener(this);
 
         this.progressBar = findViewById(R.id.progress);
 
@@ -65,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         recorder = initRecorder(this.recorder);
         recorder = prepareRecorder(this, this.recorder, surfaceHolder);
+        this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
     }
 
     @Override
@@ -104,27 +116,62 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         if (id == R.id.btnRecord) {
             this.onRecordButtonPressed(motionEvent);
         } else if (id == R.id.btnDelete) {
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                StorageUtil.clearLatest(this);
+                this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
+            }
+        } else if (id == R.id.btnNext) {
             if (motionEvent.getAction() == MotionEvent.ACTION_UP)
-                Toaster.toast(this, "DELETE");
+                this.onNextButtonClick();
         }
         return false;
     }
 
-    private void onRecordButtonPressed(MotionEvent motionEvent) {
+    private void onNextButtonClick() {
+        ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Processing..");
+        pd.show();
+        String filePath = StorageUtil.mergeObjects(this, StorageUtil.MERGED_FILE_NAME);
+        if (filePath != null) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(filePath));
+            intent.setDataAndType(Uri.parse(filePath), "video/mp4");
+            startActivity(intent);
+        } else
+            Toaster.toast(this, "Failed!");
+        pd.dismiss();
+        this.progressBar.setProgress(0);
+    }
+
+    private void onRecordButtonPressed(final MotionEvent motionEvent) {
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
             recording = true;
             recorder.start();
+            handler.removeCallbacksAndMessages(null);
+            handler.postDelayed(runnable, 10000);
         } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-            recorder.stop();
-            recording = false;
-
-            // Let's initRecorder so we can record again
-            this.recorder = initRecorder(this.recorder);
-            this.recorder = prepareRecorder(this, this.recorder, this.holder);
+            if (recording) {
+                stopRecording();
+                handler.removeCallbacksAndMessages(null);
+            }
         } else {
             Log.i("MOTION_EVENT", motionEvent.toString());
         }
     }
 
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (recording) stopRecording();
+        }
+    };
 
+    private void stopRecording() {
+        recorder.stop();
+        recording = false;
+        StorageUtil.moveFile(this, System.currentTimeMillis() + ".mp4");
+        this.progressBar.setProgress(StorageUtil.getNumberOfFiles(this));
+        // Let's initRecorder so we can record again
+        this.recorder = initRecorder(this.recorder);
+        this.recorder = prepareRecorder(this, this.recorder, this.holder);
+    }
 }
